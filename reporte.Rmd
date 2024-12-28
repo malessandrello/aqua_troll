@@ -1,0 +1,590 @@
+---
+title: "Parámetros sonda Aqua Troll"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+params:
+  data: NA 
+ 
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(bslib)
+library(tidyverse)
+library(shinyWidgets)
+library(DT)
+library(insight)
+library(shinycssloaders)
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(tidyverse)
+library(EnvStats)
+library(plotly)
+library(anytime)
+library(insight)
+library(ggsci)
+library(paletteer)
+library(patchwork)
+library(tools)
+
+
+
+max_clo <- params$data %>% select("Fluorescencia de clorofila-a (RFU)")  %>% max() %>% round(2)
+min_clo <- params$data %>% select("Fluorescencia de clorofila-a (RFU)")  %>% min() %>% round(2)
+med_clo <- params$data %>% select("Fluorescencia de clorofila-a (RFU)")  %>% pull() %>% median() %>% round(2)
+
+max_clo_base <- params$data %>% filter(.data[["Fluorescencia de clorofila-a (RFU)"]]<0.195) %>% 
+  select("Fluorescencia de clorofila-a (RFU)")  %>% max() %>% round(2)
+min_clo_base <- params$data %>% filter(.data[["Fluorescencia de clorofila-a (RFU)"]]<0.195) %>% 
+  select("Fluorescencia de clorofila-a (RFU)")  %>% min() %>% round(2)
+med_clo_base <- params$data %>% filter(.data[["Fluorescencia de clorofila-a (RFU)"]]<0.195) %>%
+  select("Fluorescencia de clorofila-a (RFU)")  %>% pull() %>% median() %>% round(2)
+
+clorof_dia_log <- ggplot(params$data, aes(.data[["Día"]],  .data[["Fluorescencia de clorofila-a (RFU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+clorof_dia <- ggplot(params$data, aes(.data[["Día"]],  .data[["Fluorescencia de clorofila-a (RFU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+       
+
+clorof_hora_log <- ggplot(params$data, aes(.data[["hora"]],  .data[["Fluorescencia de clorofila-a (RFU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+clorof_hora <- ggplot(params$data, aes(.data[["hora"]],  .data[["Fluorescencia de clorofila-a (RFU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+clorof_fecha <- ggplot(params$data, aes(.data[["Fecha"]], .data[["Fluorescencia de clorofila-a (RFU)"]]))+
+                geom_point(aes(color = Día)) + scale_y_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb")
+
+hist_clo <- ggplot(params$dat, aes(.data[["Fluorescencia de clorofila-a (RFU)"]], fill = Día, text = paste0("hora: ", hora)))+
+            geom_histogram() +  scale_x_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb") + ylab("N° de lecturas") 
+
+clo_base_dia <- params$data %>% filter(.data[["Fluorescencia de clorofila-a (RFU)"]]<0.195) %>% ggplot(aes(.data[["Día"]],  .data[["Fluorescencia de clorofila-a (RFU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+clo_base_hora <- params$data %>% filter(.data[["Fluorescencia de clorofila-a (RFU)"]]<0.195) %>% ggplot(aes(.data[["hora"]],  .data[["Fluorescencia de clorofila-a (RFU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+clo_base_fecha <- params$data %>% filter(.data[["Fluorescencia de clorofila-a (RFU)"]]<0.195) %>% ggplot( aes(.data[["Día"]], .data[["Fluorescencia de clorofila-a (RFU)"]]))+
+                geom_point(aes(color = Día)) + scale_y_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb")    
+     
+max_cond <- params$data %>% select("Conductividad específica (µS/cm)")  %>% max() %>% round(2)
+min_cond <- params$data %>% select("Conductividad específica (µS/cm)")  %>% min() %>% round(2)
+med_cond <- params$data %>% select("Conductividad específica (µS/cm)")  %>% pull() %>% median() %>% round(2)  
+
+max_cond_base <- params$data %>% select("Conductividad específica (µS/cm)")  %>%
+  filter(.data[["Conductividad específica (µS/cm)"]]>47.3) %>% max() %>% round(2)
+min_cond_base <- params$data %>% select("Conductividad específica (µS/cm)")  %>%
+  filter(.data[["Conductividad específica (µS/cm)"]]>47.3) %>% min() %>% round(2)
+med_cond_base <- params$data %>% select("Conductividad específica (µS/cm)")  %>%
+  filter(.data[["Conductividad específica (µS/cm)"]]>47.3) %>% pull() %>% median() %>% round(2)
+
+cond_base_dia <- params$data %>% filter(.data[["Conductividad específica (µS/cm)"]]>47.3) %>% ggplot(aes(.data[["Día"]],  .data[["Conductividad específica (µS/cm)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+cond_base_hora <- params$data %>% filter(.data[["Conductividad específica (µS/cm)"]]>47.3) %>% ggplot(aes(.data[["hora"]],  .data[["Conductividad específica (µS/cm)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+cond_base_fecha <- params$data %>% filter(.data[["Conductividad específica (µS/cm)"]]>47.3) %>% ggplot( aes(.data[["Día"]], .data[["Conductividad específica (µS/cm)"]]))+
+                geom_point(aes(color = Día)) + scale_y_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb")  
+
+cond_dia_log <- ggplot(params$data, aes(.data[["Día"]],  .data[["Conductividad específica (µS/cm)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+cond_dia <- ggplot(params$data, aes(.data[["Día"]],  .data[["Conductividad específica (µS/cm)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+
+cond_hora_log <- ggplot(params$data, aes(.data[["hora"]],  .data[["Conductividad específica (µS/cm)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+cond_hora <- ggplot(params$data, aes(.data[["hora"]],  .data[["Conductividad específica (µS/cm)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+cond_fecha <- ggplot(params$data, aes(.data[["Fecha"]], .data[["Conductividad específica (µS/cm)"]]))+
+                geom_point(aes(color = Día)) + scale_y_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb")    
+
+hist_cond <- ggplot(params$dat, aes(.data[["Conductividad específica (µS/cm)"]], fill = Día, text = paste0("hora: ", hora)))+
+            geom_histogram() +  scale_x_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb") + ylab("N° de lecturas")
+
+max_ox <- params$data %>% select("Oxígeno Disuelto (mg/l)")  %>% max() %>% round(2)
+min_ox <- params$data %>% select("Oxígeno Disuelto (mg/l)")  %>% min() %>% round(2)
+med_ox <- params$data %>% select("Oxígeno Disuelto (mg/l)")  %>% pull() %>% median() %>% round(2)  
+
+
+ox_dia_log <- ggplot(params$data, aes(.data[["Día"]],  .data[["Oxígeno Disuelto (mg/l)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+ox_dia <- ggplot(params$data, aes(.data[["Día"]],  .data[["Oxígeno Disuelto (mg/l)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+
+ox_hora_log <- ggplot(params$data, aes(.data[["hora"]],  .data[["Oxígeno Disuelto (mg/l)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+ox_hora <- ggplot(params$data, aes(.data[["hora"]],  .data[["Oxígeno Disuelto (mg/l)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+ox_fecha <- ggplot(params$data, aes(.data[["Fecha"]], .data[["Oxígeno Disuelto (mg/l)"]]))+
+                geom_point(aes(color = Día)) + scale_y_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb")
+
+hist_ox <- ggplot(params$dat, aes(.data[["Oxígeno Disuelto (mg/l)"]], fill = Día, text = paste0("hora: ", hora)))+
+            geom_histogram() +  scale_x_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb") + ylab("N° de lecturas")
+
+max_tu <- params$data %>% select("Turbidez (NTU)")  %>% max() %>% round(2)
+min_tu <- params$data %>% select("Turbidez (NTU)")  %>% min() %>% round(2)
+med_tu <- params$data %>% select("Turbidez (NTU)")  %>% pull() %>% median() %>% round(2)  
+
+
+tu_dia_log <- ggplot(params$data, aes(.data[["Día"]],  .data[["Turbidez (NTU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+tu_dia <- ggplot(params$data, aes(.data[["Día"]],  .data[["Turbidez (NTU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+
+tu_hora_log <- ggplot(params$data, aes(.data[["hora"]],  .data[["Turbidez (NTU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+tu_hora <- ggplot(params$data, aes(.data[["hora"]],  .data[["Turbidez (NTU)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+tu_fecha <- ggplot(params$data, aes(.data[["Fecha"]], .data[["Turbidez (NTU)"]]))+
+                geom_point(aes(color = Día)) + scale_y_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+hist_tu <- ggplot(params$dat, aes(.data[["Turbidez (NTU)"]], fill = Día, text = paste0("hora: ", hora)))+
+            geom_histogram() +  scale_x_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb") + ylab("N° de lecturas")
+
+max_te <- params$data %>% select("Temperatura (°C)")  %>% max() %>% round(2)
+min_te <- params$data %>% select("Temperatura (°C)")  %>% min() %>% round(2)
+med_te <- params$data %>% select("Temperatura (°C)")  %>% pull() %>% median() %>% round(2)  
+
+
+te_dia_log <- ggplot(params$data, aes(.data[["Día"]],  .data[["Temperatura (°C)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+te_dia <- ggplot(params$data, aes(.data[["Día"]],  .data[["Temperatura (°C)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = hora), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+
+te_hora_log <- ggplot(params$data, aes(.data[["hora"]],  .data[["Temperatura (°C)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_y_continuous(trans = "log10") + 
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+te_hora <- ggplot(params$data, aes(.data[["hora"]],  .data[["Temperatura (°C)"]])) +
+       geom_boxplot() + geom_jitter(aes(color = Día), alpha = 0.5 )+
+       scale_color_paletteer_d("ggsci::default_ucscgb") 
+
+te_fecha <- ggplot(params$data, aes(.data[["Fecha"]], .data[["Temperatura (°C)"]]))+
+                geom_point(aes(color = Día)) + scale_y_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb")
+
+hist_te <- ggplot(params$data, aes(.data[["Temperatura (°C)"]], fill = Día, text = paste0("hora: ", hora)))+
+            geom_histogram() +  scale_x_continuous(trans = "log10")+
+                scale_color_paletteer_d("ggsci::default_ucscgb") + ylab("N° de lecturas")
+
+```
+
+CLOROFILA a
+================================================================================
+
+Row
+--------------------------------------------------------------------------------
+
+### Máximo
+```{r echo=FALSE}
+valueBox(value = max_clo, caption = "Máximo", color = ifelse(max_clo > 5, "warning", "primary"))
+```
+
+### Mediana
+```{r echo=FALSE}
+valueBox(value = med_clo, caption = "Mediana", color = ifelse(med_clo > 1, "danger", "primary"))
+```
+
+### Mínimo
+```{r echo=FALSE}
+valueBox(value = min_clo, caption = "Mínimo", color = ifelse(min_clo > 1, "danger", "primary"))
+```
+
+### Máximo corregido
+```{r echo=FALSE}
+valueBox(value = max_clo_base, caption = "Máximo corregido", color = ifelse(max_clo_base > 5, "warning", "primary"))
+```
+
+### Mediana corregida
+```{r echo=FALSE}
+valueBox(value = med_clo_base, caption = "Mediana corregida", color = ifelse(med_clo_base > 1, "danger", "primary"))
+```
+
+### Mínimo corregido
+```{r echo=FALSE}
+valueBox(value = min_clo_base, caption = "Mínimo corregido", color = ifelse(min_clo_base > 1, "danger", "primary"))
+```
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### **Variación de Clorofila "a" por día (escala logarítmica)**
+```{r}
+ggplotly(clorof_dia_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de Clorofila "a" por día**
+```{r}
+ ggplotly(clorof_dia, tooltip = c("x", "y", "color"))
+```
+
+### **Eliminando datos anómalos (clorofila a mayor a 0.195 µg/l)**
+```{r}
+ggplotly(clo_base_dia, tooltip = c("x", "y", "color"))
+```
+
+
+Row {.tabset}
+------------------------------------------------------------------------------
+### **Variación de clorofila "a" por hora (escala logarítmica)**
+```{r}
+ggplotly(clorof_hora_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de clorofila "a" por hora**
+```{r}
+ggplotly(clorof_hora, tooltip = c("x", "y", "color"))
+```
+
+### **Eliminando datos anómalos (clorofila a mayor a 0.195 µg/l)**
+```{r}
+ggplotly(clo_base_hora, tooltip = c("x", "y", "color"))
+```
+Row {.tabset}
+--------------------------------------------------------------------------------
+### **Clorofila versus tiempo**
+```{r, fig.width= 14}
+ggplotly(clorof_fecha, tooltip = c("x", "y", "color"))
+```
+
+### **Histograma**
+```{r}
+ggplotly(hist_clo, tooltip = c("x", "fill", "text"))
+```
+
+### **Eliminando datos anómalos (clorofila a mayor a 0.195 µg/l)**
+```{r, fig.width= 14}
+ggplotly(clo_base_fecha, tooltip = c("x", "y", "color"))
+```
+
+CONDUCTIVIDAD
+================================================================================
+
+Row
+--------------------------------------------------------------------------------
+
+### Máximo
+```{r echo=FALSE}
+valueBox(value = max_cond, caption = "Máximo", ifelse(max_cond > 400, "danger", "primary"))
+```
+
+### Mediana
+```{r echo=FALSE}
+valueBox(value = med_cond, caption = "Mediana", color = ifelse(med_cond > 400, "danger", "primary"))
+```
+
+### Mínimo
+```{r echo=FALSE}
+valueBox(value = min_cond, caption = "Mínimo", color = ifelse(min_cond > 400, "danger", "primary"))
+```
+
+### Máximo corregido
+```{r echo=FALSE}
+valueBox(value = max_cond_base, caption = "Máximo corregido", color = ifelse(max_cond_base > 400, "warning", "primary"))
+```
+
+### Mediana corregida
+```{r echo=FALSE}
+valueBox(value = med_cond_base, caption = "Mediana corregida", color = ifelse(med_cond_base > 400, "danger", "primary"))
+```
+
+### Mínimo corregido
+```{r echo=FALSE}
+valueBox(value = min_cond_base, caption = "Mínimo corregido", color = ifelse(min_cond_base > 400, "danger", "primary"))
+```
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### **Variación de la conductividad por día (escala logarítmica)**
+```{r}
+ggplotly(cond_dia_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de la conductividad por día**
+```{r}
+ ggplotly(cond_dia, tooltip = c("x", "y", "color"))
+```
+
+### **Eliminando datos anómalos (conductividad menor a 47.3 µs/cm)**
+```{r}
+ ggplotly(cond_base_dia, tooltip = c("x", "y", "color"))
+```
+Row {.tabset}
+------------------------------------------------------------------------------
+### **Variación de la conductividad por hora (escala logarítmica)**
+```{r}
+ggplotly(cond_hora_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de la conductividad por hora**
+```{r}
+ggplotly(cond_hora, tooltip = c("x", "y", "color"))
+```
+
+### **Eliminando datos anómalos (conductividad menor a 47.3 µs/cm)**
+```{r}
+ ggplotly(cond_base_hora, tooltip = c("x", "y", "color"))
+```
+Row {.tabset}
+--------------------------------------------------------------------------------
+### **Conductividad versus tiempo**
+```{r, fig.width= 14}
+ggplotly(cond_fecha, tooltip = c("x", "y", "color"))
+```
+
+### **Histograma**
+```{r}
+ggplotly(hist_cond, tooltip = c("x", "fill", "text"))
+```
+
+### **Eliminando datos anómalos (conductividad menor a 47.3 µs/cm)**
+```{r}
+ ggplotly(cond_base_fecha, tooltip = c("x", "y", "color"))
+```
+
+CONCENTRACIÓN DE OXÍGENO
+================================================================================
+Row
+--------------------------------------------------------------------------------
+
+### Máximo
+```{r echo=FALSE}
+valueBox(value = max_ox, caption = "Máximo", ifelse(max_cond > 400, "danger", "primary"))
+```
+
+### Mediana
+```{r echo=FALSE}
+valueBox(value = med_ox, caption = "Mediana", color = ifelse(med_cond > 400, "danger", "primary"))
+```
+
+### Mínimo
+```{r echo=FALSE}
+valueBox(value = min_ox, caption = "Mínimo", color = ifelse(min_cond > 400, "danger", "primary"))
+```
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### **Variación de la concentración de oxígeno por día (escala logarítmica)**
+```{r}
+ggplotly(ox_dia_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de la concentración de oxígeno por día**
+```{r}
+ ggplotly(ox_dia, tooltip = c("x", "y", "color"))
+```
+Row {.tabset}
+------------------------------------------------------------------------------
+### **Variación de la concentración de oxígeno por hora (escala logarítmica)**
+```{r}
+ggplotly(ox_hora_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de la concentración de oxígeno por hora**
+```{r}
+ggplotly(ox_hora, tooltip = c("x", "y", "color"))
+```
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+### **Concentración de oxígeno versus tiempo**
+```{r, fig.width= 14}
+ggplotly(ox_fecha, tooltip = c("x", "y", "color"))
+
+```
+
+### **Histograma**
+```{r}
+ggplotly(hist_ox, tooltip = c("x", "fill", "text"))
+```
+
+TURBIDEZ
+================================================================================
+Row
+--------------------------------------------------------------------------------
+
+### Máximo
+```{r echo=FALSE}
+valueBox(value = max_tu, caption = "Máximo", ifelse(max_tu > 400, "danger", "primary"))
+```
+
+### Mediana
+```{r echo=FALSE}
+valueBox(value = med_tu, caption = "Mediana", color = ifelse(med_tu > 400, "danger", "primary"))
+```
+
+### Mínimo
+```{r echo=FALSE}
+valueBox(value = min_tu, caption = "Mínimo", color = ifelse(min_tu > 400, "danger", "primary"))
+```
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### **Variación de la Turbidez (NTU) por día (escala logarítmica)**
+```{r}
+ggplotly(tu_dia_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de la Turbidez (NTU) por día**
+```{r}
+ ggplotly(tu_dia, tooltip = c("x", "y", "color"))
+```
+Row {.tabset}
+------------------------------------------------------------------------------
+### **Variación de la Turbidez (NTU) por hora (escala logarítmica)**
+```{r}
+ggplotly(tu_hora_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de la Turbidez (NTU) por hora**
+```{r}
+ggplotly(tu_hora, tooltip = c("x", "y", "color"))
+```
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+### **Turbidez (NTU) vesus tiempo**
+```{r, fig.width= 14}
+ggplotly(tu_fecha, tooltip = c("x", "y", "color"))
+
+```
+
+### **Histograma**
+```{r}
+ggplotly(hist_tu, tooltip = c("x", "fill", "text"))
+```
+
+TEMPRETAURA
+================================================================================
+
+Row
+--------------------------------------------------------------------------------
+
+### Máximo
+```{r echo=FALSE}
+valueBox(value = max_te, caption = "Máximo", ifelse(max_clo > 1, "danger", "primary"))
+```
+
+### Mediana
+```{r echo=FALSE}
+valueBox(value = med_te, caption = "Mediana", color = ifelse(med_clo > 1, "danger", "primary"))
+```
+
+### Mínimo
+```{r echo=FALSE}
+valueBox(value = min_te, caption = "Mínimo", color = ifelse(min_clo > 1, "danger", "primary"))
+```
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+
+### **Variación de la Temperatura (°C) por día (escala logarítmica)**
+```{r}
+ggplotly(te_dia_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de la Temperatura (°C) por día**
+```{r}
+ ggplotly(te_dia, tooltip = c("x", "y", "color"))
+```
+Row {.tabset}
+------------------------------------------------------------------------------
+### **Variación de la Temperatura (°C) por hora (escala logarítmica)**
+```{r}
+ggplotly(te_hora_log, tooltip = c("x", "y", "color"))
+```
+
+
+### **Variación de la Temperatura (°C) por hora**
+```{r}
+ggplotly(te_hora, tooltip = c("x", "y", "color"))
+```
+
+Row {.tabset}
+--------------------------------------------------------------------------------
+### **Temperatura (°C) versus tiempo**
+```{r, fig.width= 14}
+ggplotly(te_fecha, tooltip = c("x", "y", "color"))
+```
+
+### **Histograma**
+```{r}
+ggplotly(hist_te, tooltip = c("x", "fill", "text"))
+```
